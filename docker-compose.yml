@@ -1,0 +1,40 @@
+services:
+  mysql-financas:
+    image: mysql:8.0
+    container_name: mysql-financas
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: financasdb
+      MYSQL_USER: fiap
+      MYSQL_PASSWORD: fiap123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-financas-data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - financas-network
+
+  api-financas:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-financas
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-financas:3306/financasdb?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: fiap
+      SPRING_DATASOURCE_PASSWORD: fiap123
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql-financas
+    networks:
+      - financas-network
+
+volumes:
+  mysql-financas-data:
+
+networks:
+  financas-network:
