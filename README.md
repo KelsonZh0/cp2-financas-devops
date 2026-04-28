@@ -45,73 +45,108 @@ financas/
 
 ## 🚀 Como Rodar Localmente
 
-### Pré-requisitos
-- Docker instalado
-- Docker Compose instalado
+Você pode executar este projeto de duas formas: usando Docker (ambiente completo) ou rodando a API diretamente via Maven (ideal para desenvolvimento).
 
-> **Não tem o Docker instalado?**  
-> Recomendamos a instalação do **Docker Desktop**, que já inclui o Docker Engine e o Docker Compose.
-> - [Instalação para Windows](https://docs.docker.com/desktop/install/windows-install/)
-> - [Instalação para Mac](https://docs.docker.com/desktop/install/mac-install/)
-> - [Instalação para Linux](https://docs.docker.com/desktop/install/linux-install/)
+### Opção 1: Usando Docker (Recomendado)
 
-> ⚠️ **Aviso para usuários de Windows:** Recomendamos rodar os comandos a seguir utilizando **Git Bash** ou **WSL**. Caso utilize o `CMD` ou `PowerShell`, preste atenção aos comandos que possuem quebra de linha com a barra invertida (`\`), pois eles podem não funcionar como esperado. Nesses terminais, pode ser necessário rodar tudo em uma única linha.
+**Pré-requisitos:**
+- Docker e Docker Compose instalados.
 
-### Passos
+**Passos:**
+1. Clone o repositório e entre na pasta:
+   ```bash
+   git clone https://github.com/KelsonZh0/cp2-financas-devops.git
+   cd cp2-financas-devops
+   ```
+2. Suba os containers da API e do banco de dados:
+   ```bash
+   docker compose up -d --build
+   ```
+3. Aguarde alguns segundos para o banco de dados inicializar e acesse a API no navegador:
+   `http://localhost:8080/financas`
 
-1. **Clone o projeto:**
-```bash
-git clone https://github.com/KelsonZh0/cp2-financas-devops.git
-cd cp2-financas-devops
-```
+### Opção 2: Usando Maven e Java Nativamente (Sem Docker para a API)
 
-2. **Suba os containers:**
-```bash
-docker compose up -d --build
-```
+**Pré-requisitos:**
+- Java 17 instalado
+- MySQL 8 instalado e rodando localmente (ou apenas o container do MySQL)
+- Maven (ou utilize o `mvnw` incluso no projeto)
 
-3. **Verifique se os containers estão rodando:**
-```bash
-docker ps
-```
+**Passos:**
+1. Clone o projeto e acesse o diretório:
+   ```bash
+   git clone https://github.com/KelsonZh0/cp2-financas-devops.git
+   cd cp2-financas-devops
+   ```
+2. Caso não tenha o MySQL instalado localmente, você pode subir apenas o banco de dados pelo Docker:
+   ```bash
+   docker compose up -d mysql-financas
+   ```
+3. Execute a aplicação Spring Boot utilizando o Maven Wrapper:
+   ```bash
+   # No Windows (CMD ou PowerShell)
+   mvnw.cmd spring-boot:run
 
-4. **Teste a API:**
-Acesse no navegador ou via cURL: `http://localhost:8080/financas`
+   # No Linux ou Git Bash
+   ./mvnw spring-boot:run
+   ```
+4. A API estará disponível no endereço: `http://localhost:8080/financas`
 
 ---
 
 ## ☁️ Como Rodar em uma VM Ubuntu na Azure
 
-1. **Acesse a VM via SSH:**
+Para realizar o deploy do projeto em uma máquina virtual (VM) Linux na nuvem da Azure, siga o passo a passo abaixo.
+
+### 1. Acesso e Preparação do Ambiente
+Acesse sua VM remotamente via SSH utilizando o IP Público fornecido pela Azure:
 ```bash
 ssh admlnx@IP_PUBLICO_DA_VM
 ```
 
-2. **Instale o Docker e Git:**
+Atualize a lista de pacotes do sistema e instale as dependências (Docker, Docker Compose e Git):
 ```bash
 sudo apt update -y
 sudo apt install -y docker.io docker-compose-plugin git
+```
+
+Inicie o serviço do Docker e configure para que inicie automaticamente com o sistema:
+```bash
 sudo systemctl enable --now docker
+```
+
+*(Opcional)* Adicione seu usuário ao grupo do Docker para não precisar digitar `sudo` em todos os comandos:
+```bash
 sudo usermod -aG docker $USER
 newgrp docker
 ```
 
-3. **Clone e execute o projeto:**
+### 2. Clonagem e Execução
+Faça o download do projeto na sua VM:
 ```bash
 git clone https://github.com/KelsonZh0/cp2-financas-devops.git
 cd cp2-financas-devops
-docker compose up -d --build
 ```
 
-### Liberação de Porta na Azure
-Para acesso externo, a porta 8080 deve estar liberada no Network Security Group (NSG) da Azure:
-- **Networking** > **Add inbound port rule**
-  - **Destination port ranges:** 8080
-  - **Protocol:** TCP
-  - **Action:** Allow
-  - **Name:** Allow-8080-Spring
+Realize o build das imagens e levante a infraestrutura:
+```bash
+docker compose up -d --build
+```
+Verifique se a aplicação e o banco estão rodando normalmente com `docker ps`.
 
-Acesse em: `http://IP_PUBLICO_DA_VM:8080/financas`
+### 3. Liberação de Portas (NSG Azure)
+Para que a API seja acessível pela internet, é obrigatório liberar a porta `8080` no **Network Security Group (NSG)** da sua VM na Azure:
+1. No Portal do Azure, vá até a página da sua VM.
+2. No menu lateral, acesse **Networking** (Rede).
+3. Clique em **Add inbound port rule** (Adicionar regra de porta de entrada).
+4. Configure os parâmetros:
+   - **Destination port ranges:** `8080`
+   - **Protocol:** `TCP`
+   - **Action:** `Allow`
+   - **Name:** `Allow-8080-Spring`
+5. Salve a regra.
+
+**Teste final:** Acesse pelo navegador `http://IP_PUBLICO_DA_VM:8080/financas`.
 
 ---
 
